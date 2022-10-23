@@ -1,10 +1,11 @@
 import numpy as np
 from tensorflow import keras
 from tensorflow.keras.datasets import mnist
-from tensorflow.keras.layers import Dense, Flatten
+from tensorflow.keras.layers import Dense, Flatten, MaxPooling2D, Conv2D
 import matplotlib.pyplot as plt
 import os
 import cv2
+
 
 def convert_pic(adress):
     img = cv2.imread(adress)
@@ -37,7 +38,7 @@ def convert_pic(adress):
 
     c = min(h1, w1)
 
-    # ОБРЕЗАНИЕ ИЗОБРАЖЕНИЯ ПО КРАЯМ
+    #ОБРЕЗАНИЕ ИЗОБРАЖЕНИЯ ПО КРАЯМ
     img = img[(h1 - c):(h2 + c), (w1 - c):(w2 + c)]
 
     plt.imshow(img)
@@ -51,20 +52,28 @@ def convert_pic(adress):
     img = img.astype(np.float32)
     return img
 
+
 def main():
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
     x_train = x_train / 255
     x_test = x_test / 255
 
-    model = keras.Sequential([
-        Flatten(input_shape=(28, 28, 1)),
-        Dense(100, activation='relu'),
-        Dense(10, activation='softmax')])
-
     y_train_cat = keras.utils.to_categorical(y_train, 10)
     y_test_cat = keras.utils.to_categorical(y_test, 10)
 
+    x_train = np.expand_dims(x_train, axis=3)
+    x_test = np.expand_dims(x_test, axis=3)
+
+    model = keras.Sequential([
+        Conv2D(32, (3, 3), padding='same', activation='relu', input_shape=(28, 28, 1)),
+        MaxPooling2D((2, 2), strides=2),
+        Conv2D(32, (3, 3), padding='same', activation='relu'),
+        MaxPooling2D((2, 2), strides=2),
+        Flatten(),
+        Dense(128, activation='relu'),
+        Dense(10, activation='softmax')
+    ])
     model.compile(optimizer='Adam',
                   loss='categorical_crossentropy',
                   metrics=['accuracy'])
@@ -83,6 +92,7 @@ def main():
 
         plt.imshow(img)
         plt.show()
+
 
 if __name__ == '__main__':
     main()
